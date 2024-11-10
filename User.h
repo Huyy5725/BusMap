@@ -3,122 +3,265 @@
 
 #include "BusRoute.h"
 #include <string>
+#include <ctime>
+#include <iomanip>
+#include <conio.h>
+
 
 const int MAX_USERS = 1000;
-struct UserAccount {
+const int MAX_SEARCH_HISTORY=20;
+struct UserAccount { 
     string username;
     string password;
 };
+
 class User : public BusRoute {
-	private:
-	    int soLanTimKiem;
-	    string lichSuTimKiem[MAX][2];
-	    UserAccount accounts[MAX_USERS];//luu tai khoan user
-	    time_t thoiGianTimKiem[MAX];
-	    int soLuongNguoiDung; 
-	    int currentUserIndex; 
-	public:
-	    User();
-	    void dangKyTaiKhoan();    
-	    bool dangNhap();
-	    void timDuongDiNganNhat(BusRoute& route);
-	
-	    void hienThiLichSuTimKiem() const;
-	
-	    void hienThiTatCaTram(BusRoute route) const;
+    private:
+        UserAccount accounts[MAX_USERS];
+        int soLuongNguoiDung;
+        int currentUserIndex;
+        string lichSuTimKiem[MAX_USERS][MAX_SEARCH_HISTORY][2];
+        time_t thoiGianTimKiem[MAX_USERS][MAX_SEARCH_HISTORY];      
+        int soLanTimKiem[MAX_USERS];       
+    public:
+        User();
+        void dangKyTaiKhoan();
+        bool dangNhap();
+        void dangXuat();
+        void timDuongDiNganNhat(BusRoute& route);
+        void hienThiLichSuTimKiem() const;
+        void hienThiDanhSachTram(const BusRoute& busRoute) const;
 };
-User::User(){
-	soLanTimKiem=0;
-	soLuongNguoiDung=0;
-	currentUserIndex=-1;
+User::User() {
+    soLuongNguoiDung = 0;
+    currentUserIndex = -1;
+    for (int i = 0; i < MAX_USERS; i++) {
+        soLanTimKiem[i] = 0;
+    }
 }
 void User::dangKyTaiKhoan() {
     if (soLuongNguoiDung >= MAX_USERS) {
-        cout << "Da dat gioi han toi da nguoi dung!" << endl;
+        cout << "Đã đạt giới hạn tối đa người dùng!" << endl;
         return;
     }
     string username, password;
-    cout << "Nhap ten dang nhap: ";
+    char ch;
+    bool showPassword = false;
+    cout << "Nhập tên đăng nhập: ";
     cin.ignore();
     getline(cin, username);
+    while (username.empty()) {
+        cout << "Tên đăng nhập không được để trống!" << endl;
+        cout << "Nhập tên đăng nhập: ";
+        cin.ignore();
+        getline(cin, username);
+    }
     for (int i = 0; i < soLuongNguoiDung; i++) {
-        if (accounts[i].username == username) {
-            cout << "Ten dang nhap da ton tai. Vui long chon ten khac!" << endl;
-            return;
+        while (accounts[i].username == username) {
+            cout << "Tên đăng nhập đã tồn tại! Vui lòng nhập tên khác." << endl;
+            cout << "Nhập tên đăng nhập: ";
+            cin.ignore();
+            getline(cin, username);
         }
     }
-    cout << "Nhap mat khau: ";
-    getline(cin, password);
+    do{
+        cout << "Nhập mật khẩu: ";
+        password.clear();
+            while (true) {
+                ch = _getch();
+                if (ch == 13) { 
+                    break;
+                } else if (ch == 9) { 
+                    showPassword = !showPassword;
+                    cout << "\rNhập mật khẩu: ";
+                    if (showPassword) {
+                        cout << password;
+                    } else {
+                        for (size_t i = 0; i < password.length(); ++i) {
+                            cout << '*';
+                        }
+                    }
+                    continue;
+                } else if (ch == 8 && !password.empty()) { 
+                    password.pop_back();
+                    cout << "\b \b";
+                } else if (ch >= 32 && ch <= 126) { 
+                    password += ch;
+                    cout << (showPassword ? ch : '*');
+                }
+            }
+            if(password.empty()){cout << "\nMật khẩu không được để trống!" << endl;}
+    }while(password.empty());
     accounts[soLuongNguoiDung].username = username;
     accounts[soLuongNguoiDung].password = password;
     soLuongNguoiDung++;
-	cout << "Dang ky thanh cong!" << endl;
+    cout << "\nĐăng ký thành công!" << endl;
 }
 bool User::dangNhap() {
+    if (currentUserIndex != -1) { 
+        cout << "Bạn phải đăng xuất trước khi đăng nhập!" << endl;
+        return false;
+    }
     if (soLuongNguoiDung == 0) {
-        cout << "Không có tài khoản nào. Vui long dang ki truoc!" << endl;
+        cout << "Không có tài khoản nào. Vui lòng đăng ký trước!" << endl;
         return false;
     }
     string username, password;
-    cout << "Nhap ten dang nhap: ";
-    cin.ignore();
-    getline(cin, username);
-    cout << "Nhap mat khau: ";
-    getline(cin, password);
-    for (int i = 0; i < soLuongNguoiDung; i++) {
-        if (accounts[i].username == username && accounts[i].password == password) {
-            currentUserIndex = i;
-            cout << "Dang nhap thanh cong!" << endl;
-        	return true;
+    char ch;
+    bool showPassword = false;
+    int attempts = 0; 
+    while (attempts < 3) { 
+        do {
+            cout << "Nhập tên đăng nhập: ";
+            cin.ignore();
+            getline(cin, username);
+            if (username.empty()) {
+                cout << "Tên đăng nhập không được để trống!" << endl;
+            }
+        } while (username.empty());
+        do {
+            cout << "Nhập mật khẩu: ";
+            password.clear();
+            while (true) {
+                ch = _getch();
+                if (ch == 13) { 
+                    break;
+                } else if (ch == 9) { 
+                    showPassword = !showPassword;
+                    cout << "\rNhập mật khẩu: ";
+                    if (showPassword) {
+                        cout << password;
+                    } else {
+                        for (size_t i = 0; i < password.length(); ++i) {
+                            cout << '*';
+                        }
+                    }
+                    continue;
+                } else if (ch == 8 && !password.empty()) { 
+                    password.pop_back();
+                    cout << "\b \b";
+                } else if (ch >= 32 && ch <= 126) { 
+                    password += ch;
+                    cout << (showPassword ? ch : '*');
+                }
+            }
+            if (password.empty()) {
+                cout << "\nMật khẩu không được để trống!" << endl;
+            }
+        } while (password.empty());
+        for (int i = 0; i < soLuongNguoiDung; i++) {
+            if (accounts[i].username == username && accounts[i].password == password) {
+                currentUserIndex = i;
+                cout << "\nĐăng nhập thành công!" << endl;
+                return true;
+            }
+        }
+        cout << "\nSai tên đăng nhập hoặc mật khẩu!\n";
+        attempts++;
+        if (attempts < 3) {
+            cout << "Vui lòng nhập lại. Còn " << 3 - attempts << " lần nhập\n";
+        }
+        if (attempts >= 3) {
+            cout << "Đăng nhập thất bại! Đăng nhập sau:\n";
+            clock_t start_time = clock();
+            int lock_duration = 30; 
+            while (true) {
+                clock_t current_time = clock();
+                double elapsed_time = (double)(current_time - start_time) / CLOCKS_PER_SEC;
+                int remaining_time = lock_duration - (int)elapsed_time;
+
+                if (remaining_time <= 0) {
+                    cout<<endl;
+                    break;
+                }
+                cout << "\rThời gian còn lại: " << remaining_time << " s ";
+                cout.flush(); 
+            }
         }
     }
-    cout << "Sai ten dang nahp hoac mat khau!" << endl;
     return false;
+}
+void User::dangXuat() {
+    if (currentUserIndex != -1) {
+        currentUserIndex = -1;
+        cout << "Đăng xuất thành công!" << endl;
+    } else {
+        cout << "Không có tài khoản nào đăng nhập." << endl;
+    }
 }
 void User::timDuongDiNganNhat(BusRoute& route) {
     if (currentUserIndex == -1) {
-        cout << "Ban phai dang nhap truoc khi tim duong!" << endl;
+        cout << "Bạn phải đăng nhập trước khi tìm đường!" << endl;
         return;
     }
     string startTram, endTram;
-    cout << "Nhap tram xuat phat: ";
-    cin.ignore();
-    getline(cin, startTram);
-    cout << "Nhap tram den: ";
-    getline(cin, endTram);
+    do {
+        cout << "Nhập trạm xuất phát: ";
+        cin.ignore();
+        getline(cin, startTram);
+        if (startTram.empty()) {
+            cout << "Tên trạm không được để trống!" << endl;
+        }
+    } while (startTram.empty());
+    do {
+        cout << "Nhập trạm đến: ";
+        getline(cin, endTram);
+        if (endTram.empty()) {
+            cout << "Tên trạm không được để trống!" << endl;
+        }
+    } while (endTram.empty());
     route.dijkstra(startTram, endTram);
-    if (soLanTimKiem < MAX) {
-        lichSuTimKiem[soLanTimKiem][0] = startTram;
-        lichSuTimKiem[soLanTimKiem][1] = endTram;
-        thoiGianTimKiem[soLanTimKiem] = time(0);
-        soLanTimKiem++;
+    if (soLanTimKiem[currentUserIndex] < MAX_SEARCH_HISTORY) {
+        lichSuTimKiem[currentUserIndex][soLanTimKiem[currentUserIndex]][0] = startTram;
+        lichSuTimKiem[currentUserIndex][soLanTimKiem[currentUserIndex]][1] = endTram;
+        thoiGianTimKiem[currentUserIndex][soLanTimKiem[currentUserIndex]] = time(nullptr);
+        soLanTimKiem[currentUserIndex]++;
+    } else {
+        cout << "Số lần tìm kiếm đã đạt giới hạn tối đa.\n";
     }
 }
 void User::hienThiLichSuTimKiem() const {
     if (currentUserIndex == -1) {
-        cout << "Ban phai dang nhap truoc khi xem lich su!" << endl;
+        cout << "Bạn phải đăng  nhập trước khi xem lịch sử!" << endl;
         return;
     }
-    cout << "Lich su tim kiem:\n";
-    for (int i = 0; i < soLanTimKiem; i++) {
-        string thoiGian = ctime(&thoiGianTimKiem[i]); // Chuy?n �?i th?i gian th�nh chu?i
-        if (!thoiGian.empty() && thoiGian[thoiGian.length() - 1] == '\n') {
-		    thoiGian.erase(thoiGian.length() - 1); // Removes the last character
-		}
-
-        cout << lichSuTimKiem[i][0] << " -> " << lichSuTimKiem[i][1] << " (Thoi gian: " << thoiGian << ")" << endl;
-    }
-}
-
-void User::hienThiTatCaTram(BusRoute route) const {
-    if (currentUserIndex == -1) {
-        cout << "Ban phai đang nhap truoc khi xem danh sach tram!" << endl;
+    if (soLanTimKiem[currentUserIndex] == 0) {
+        cout << "Người dùng chưa có lịch sử tìm kiếm." << endl;
         return;
     }
-	cout << "Danh sach tat ca cac tram:\n";
-    for (int i = 0; i < route.getNumStops(); i++) {
-        cout << i + 1 << ". " << route.getNameStop(i) << endl;
+    cout << "Lịch sử tìm kiếm của " << accounts[currentUserIndex].username << ":\n";
+    for (int i = 0; i < soLanTimKiem[currentUserIndex]; i++) {
+        tm* thoiGianTm = localtime(&thoiGianTimKiem[currentUserIndex][i]);
+        if (thoiGianTm) {
+            cout << lichSuTimKiem[currentUserIndex][i][0] << " -> " 
+                      << lichSuTimKiem[currentUserIndex][i][1] << " (Thời gian: " 
+                      << put_time(thoiGianTm, "%d/%m/%y %H:%M") << ")" << endl;
+        } else {
+            cout << "Lỗi khi lấy thời gian tìm kiếm!" << endl;
+        }
     }
 }
+void User::hienThiDanhSachTram(const BusRoute& busRoute) const {
+    int soLuongTram = busRoute.getNumStops();
+     setTextColor(6); // Đặt màu vàng cho khung
 
+    // Vẽ khung phía trên
+    cout << "\n=========== Danh sách các trạm hiện có ============\n";
+    
+    // In danh sách trạm trong khung với tên trạm màu trắng
+    for (int i = 0; i < soLuongTram; ++i) {
+        cout << "| ";
+        
+        setTextColor(15); // Màu trắng cho tên trạm
+        cout << "- Trạm: " << busRoute.getNameStop(i);
+
+        setTextColor(6); // Trở lại màu vàng cho khung
+        cout << string(45 - busRoute.getNameStop(i).size(), ' ') << "|\n";
+    }
+
+    // Vẽ khung phía dưới
+    cout << "==========================================================\n";
+    
+    setTextColor(7); // Đặt lại màu mặc định
+}
 #endif

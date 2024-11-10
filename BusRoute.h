@@ -3,10 +3,27 @@
 
 #include <string>
 #include<iostream>
+#include <fstream>
+#include <windows.h>
+
 using namespace std;
 
 const int MAX = 100; //so luong tram toi da 
 const int INF = 999999;
+
+// Hàm để thay đổi màu văn bản
+void setTextColor(int color) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, color);
+}
+
+void clearScreen() {
+    #ifdef _WIN32
+        system("CLS");
+    #else
+        system("clear");
+    #endif
+}
 
 class BusRoute {
 	private:
@@ -31,6 +48,9 @@ class BusRoute {
 	    void inDuongDi(int parent[], int i);
 	    int minDistance(int dist[], bool visited[]);
 	    string nhapTenTramKhongTrung(BusRoute& route);
+
+		void saveToFile(const std::string& filename);
+		void loadFromFile(const std::string& filename);
 };
 BusRoute::BusRoute() {
 	numStops = 0;
@@ -61,7 +81,7 @@ void BusRoute::setDistance(int tram1, int tram2, int khoangCach) {
 }
 void BusRoute::nhapTenTram() {
 	for (int i = 0; i < numStops; i++) {
-		cout << "Nhap ten tram " << i + 1 << ": ";
+		cout << "Nhập tên trạm " << i + 1 << ": ";
 		nameStop[i] = nhapTenTramKhongTrung(*this);  
 	}
 }
@@ -69,24 +89,37 @@ void BusRoute::nhapKhoangCachTheoTen() {
 	string tram1, tram2;
 	int khoangCach;
 	while (true) {
-	    cout << "Nhap tram xuat phat (ten tram, nhap '0' de ket thuc): ";
+	    cout << "Nhập trạm xuất phát (tên trạm, nhập '0' để kết thúc): ";
 	    getline(cin, tram1);
-	    if (tram1 == "0") break;
-	    cout << "Nhap tram den (ten tram): ";
+		if (tram1 == "0") break;
+		while(timTram(tram1)==-1){
+			cout << "Trạm không tồn tại!" << endl;
+			cout << "Nhập trạm xuất phát: ";getline(cin, tram1);
+		}
+	    
+	    cout << "Nhập trạm đến (tên trạm): ";
 	    getline(cin, tram2);
-	
-	    cout << "Nhap khoang cach giua " << tram1 << " va " << tram2 << ": ";
+		while(timTram(tram1)==-1){
+			cout << "Trạm không tồn tại!" << endl;
+			cout << "Nhập trạm xuất đến: ";getline(cin, tram2);
+		}
+	    cout << "Nhập khoảng cách giữa " << tram1 << " và " << tram2 << ": ";
 	    cin >> khoangCach;
 	    cin.ignore(); 
+		while(khoangCach<0){
+			cout << "Nhập lại khoảng cách giữa " << tram1 << " và " << tram2 << ": ";
+			cin >> khoangCach;
+	    	cin.ignore(); 
+		}
 	    int idx1 = timTram(tram1);
 	    int idx2 = timTram(tram2);	
-	    if (idx1 != -1 && idx2 != -1 && khoangCach > 0) {
+	    if (idx1 != -1 && idx2 != -1) {
 	        setDistance(idx1, idx2, khoangCach);
 	    } else {
-	        cout << "Tram khong ton tai hoac khoang cach khong hop le!" << endl;
+	        cout << "Trạm không tồn tại!" << endl;
 	    }
 	}
-	    }
+}
 int BusRoute::timTram(const string& tenTram) const {
 	for (int i = 0; i < numStops; i++) {
 	    if (nameStop[i] == tenTram) {
@@ -99,7 +132,7 @@ void BusRoute::dijkstra(const string& startTram, const string& endTram) {
 	int start = timTram(startTram);
 	int end = timTram(endTram);
 	if (start == -1 || end == -1) {
-	    cout << "Tram xuat phat hoac tram den khong ton tai!" << endl;
+	    cout << "Trạm xuất phát hoặc trạm đến không tồn tại!" << endl;
 	    return;
 	}
 	int dist[MAX];
@@ -123,10 +156,10 @@ void BusRoute::dijkstra(const string& startTram, const string& endTram) {
 	    }
 	}
 	if (dist[end] == INF) {
-	    cout << "Khong co tuyen truc tiep giua " << startTram << " va " << endTram << "." << endl;
+	    cout << "Không có tuyến trực tiếp từ " << startTram << " tới " << endTram << "." << endl;
 	} else {
-	    cout << "Khoang cach ngan nhat giua " << startTram << " va " << endTram << " la: " << dist[end] << endl;
-	    cout << "Duong di: ";
+	    cout << "Khoảng cách ngắn nhất giữa " << startTram << " và " << endTram << " là: " << dist[end] << endl;
+	    cout << "Đường đi: ";
 	        inDuongDi(parent, end);
 	        cout << endTram << endl;
 	}
@@ -155,7 +188,7 @@ string BusRoute::nhapTenTramKhongTrung(BusRoute& route) {
 		for (int i = 0; i < route.getNumStops(); i++) {
 		    if (route.getNameStop(i) == tenTram) {
 		        tenTrung = true;
-		        cout << "Ten tram da ton tai. Vui long nhap lai!" << endl;
+		        cout << "Tên trạm đã tồn tại. Vui lòng nhập lại!" << endl;
 		        break;
 		    }
 		}
@@ -165,5 +198,40 @@ string BusRoute::nhapTenTramKhongTrung(BusRoute& route) {
 	}
 	return tenTram;
 }
-
+void BusRoute::saveToFile(const std::string& filename) {
+    ofstream outFile(filename);
+    if (outFile.is_open()) {
+        outFile << numStops << endl;
+        for (int i = 0; i < numStops; i++) {
+            outFile << nameStop[i] << endl;
+        }
+        for (int i = 0; i < numStops; i++) {
+            for (int j = 0; j < numStops; j++) {
+                outFile << distance[i][j] << " ";
+            }
+            outFile << endl;
+        }
+        outFile.close();
+    } else {
+        cerr << "Không thể mở file để ghi!" << endl;
+    }
+}
+void BusRoute::loadFromFile(const std::string& filename) {
+    ifstream inFile(filename);
+    if (inFile.is_open()) {
+        inFile >> numStops;
+        inFile.ignore(); 
+        for (int i = 0; i < numStops; i++) {
+            getline(inFile, nameStop[i]);
+        }
+        for (int i = 0; i < numStops; i++) {
+            for (int j = 0; j < numStops; j++) {
+                inFile >> distance[i][j];
+            }
+        }
+        inFile.close();
+    } else {
+        cerr << "Không thể mở file để đọc!" << endl;
+    }
+}
 #endif

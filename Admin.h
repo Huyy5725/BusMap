@@ -3,6 +3,8 @@
 
 #include "BusRoute.h"
 #include <string>
+#include <conio.h>
+#include <ctime> 
 
 class Admin : public BusRoute {
 	private:
@@ -22,46 +24,113 @@ Admin::Admin(){
 	adminPass="1";
 }
 bool Admin::authenticate() {
-	string user, pass;
-	cout << "Nhap ten dang nhap: ";
-	cin.ignore();
-	getline(cin, user);
-	cout << "Nhap mat khau: ";
-	getline(cin, pass);
-	return (user == adminName && pass == adminPass);
+    string user, pass;
+    char ch;
+    bool showPassword = false;
+    int attempts = 0;
+
+    while (attempts < 3) {
+        cout << "Nhập tên đăng nhập: ";
+        if (attempts == 0) {
+            cin.ignore();
+        }
+        getline(cin, user);
+        cout << "Nhập mật khẩu: ";
+        pass.clear();
+        while (true) {
+            ch = _getch();
+            if (ch == 13) { 
+                break;
+            } else if (ch == 9) { 
+                showPassword = !showPassword;
+                cout << "\rNhập mật khẩu: ";
+                if (showPassword) {
+                    cout << pass;
+                } else {
+                    for (size_t i = 0; i < pass.length(); ++i) {
+                        cout << '*';
+                    }
+                }
+                continue;
+            } else if (ch == 8 && !pass.empty()) { 
+                pass.pop_back();
+                cout << "\b \b";
+            } else if (ch >= 32 && ch <= 126) { 
+                pass += ch;
+                cout << (showPassword ? ch : '*');
+            }
+        }
+        cout << endl;
+        if (user == adminName && pass == adminPass) {
+            cout << "Đăng nhập thành công!" << endl;
+            return true;
+        } else {
+            attempts++;
+            cout << "Sai tên đăng nhập hoặc mật khẩu. ";
+            if (attempts < 3) {
+                cout << "Vui lòng nhập lại. Còn " << 3 - attempts << " lần nhập\n";
+            }
+        }
+    }
+	cout << "Đăng nhập thất bại! Đăng nhập lay sau: \n";
+    clock_t start_time = clock();
+    int lock_duration = 30; 
+    while (true) {
+        clock_t current_time = clock();
+        double elapsed_time = (double)(current_time - start_time) / CLOCKS_PER_SEC;
+        int remaining_time = lock_duration - (int)elapsed_time;
+
+        if (remaining_time <= 0) {
+			cout<<endl;
+            break;
+        }
+        cout << "\rThời gian còn lại: " << remaining_time << " s ";
+        cout.flush(); 
+    }
+    return false;
 }
 void Admin::thietLapTram(BusRoute& route) {
 	int stops;
-	do{
-	    cout << "Nhap so luong tram: ";
-	    cin >> stops;
-	}while(stops<1||stops>100);
-	    route.setNumStops(stops);
-	    cin.ignore(); 
-	    route.nhapTenTram();
-		for (int i = 0; i < route.getNumStops(); i++) {
-	        for (int j = 0; j < route.getNumStops(); j++) {
-	            route.setDistance(i, j, (i == j) ? 0 : INF);
-	        }
+	do {
+        cout << "Nhập số lượng trạm: ";cin >> stops;
+        if (cin.fail()) {
+            cout << "Vui lòng nhập số.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+        } 
+        else if (!cin.fail()&&stops < 2) {
+            cout << "Nhập tối thiểu 2 trạm.\n";
+        }
+        else if (stops > 100) {
+            cout << "Số lượng trạm không được quá 100.\n";
+        }
+    } while (stops < 2 || stops > 100);
+	route.setNumStops(stops);
+	cin.ignore(); 
+	route.nhapTenTram();
+	for (int i = 0; i < route.getNumStops(); i++) {
+	    for (int j = 0; j < route.getNumStops(); j++) {
+	        route.setDistance(i, j, (i == j) ? 0 : INF);
 	    }
-	cout << "Da thiet lap " << route.getNumStops() << " tram." << endl;
-	    route.nhapKhoangCachTheoTen();
+	}
+	cout << "Đã thiết lập " << route.getNumStops() << " trạm." << endl;
+	route.nhapKhoangCachTheoTen();
 }
 void Admin::xoaTram(BusRoute& route) {
 	string tenTramCanXoa;
-	cout << "Nhap ten tram can xoa: ";
+	cout << "Nhập tên trạm cần xóa: ";
 	cin.ignore();
 	getline(cin, tenTramCanXoa);
 	int idx = route.timTram(tenTramCanXoa);
 	if (idx == -1) {
-		cout << "Tram khong ton tai!" << endl;
+		cout << "Trạm không tồn tại!" << endl;
 		return;
 	}
 	int ketNoi[MAX];
 	int soLuongKetNoi = 0;
 	for (int i = 0; i < route.getNumStops(); i++) {
 		if (route.getDistance(i, idx) != INF && i != idx) {
-		    ketNoi[soLuongKetNoi++] = i;  // L�u tr?m c� k?t n?i v?i tr?m b? x�a
+		    ketNoi[soLuongKetNoi++] = i;  
 		}
 	}
 	for (int i = 0; i < soLuongKetNoi; i++) {
@@ -84,19 +153,19 @@ void Admin::xoaTram(BusRoute& route) {
 		}
 	}
 	route.setNumStops(route.getNumStops() - 1);
-	cout << "Da xoa tram " << tenTramCanXoa << " va cap nhat cac ket noi." << endl;
+	cout << "Đã xóa trạm " << tenTramCanXoa << " và cập nhật lại các kết nối." << endl;
 }
 void Admin::themTram(BusRoute& route) {
 	if (route.getNumStops() >= MAX) {
-		cout << "Khong the them tram, da den gioi han toi da!" << endl;
+		cout << "Không thể thêm trạm đã đến giới hạn tối đa!" << endl;
 		return;
 	}
 	string tenTramMoi;
-	cout << "Nhap ten tram moi: ";
+	cout << "Nhập trạm mới: ";
 	cin.ignore();
 	getline(cin, tenTramMoi);
 	if (route.timTram(tenTramMoi) != -1) {
-		cout << "Ten tram da ton tai, khong the them tram moi." << endl;
+		cout << "Tên trạm đã tồn tại." << endl;
 		return;
 	}
 	route.setNameStop(route.getNumStops(), tenTramMoi);
@@ -105,77 +174,93 @@ void Admin::themTram(BusRoute& route) {
 	string tram1, tram2;
 	int khoangCach1, khoangCach2;
 	while (true) {
-		cout << "Nhap ten tram ket noi voi tram moi (nhap '0' de dung): ";
+		cout << "Nhập trạm kết nối với trạm mới (nhập '0' để dừng): ";
 		getline(cin, tram2);
 		if (tram2 == "0") {break;}
 		int idxTram2 = route.timTram(tram2);
 		if (idxTram2 == -1) {
-		    cout << "Tram khong ton tai!" << endl;
+		    cout << "Trạm không tồn tại!" << endl;
 		    continue;
 		}
-		cout << "Nhap tram hien dang ket noi voi tram "<<tram2<<": ";
+		cout << "Nhập trạm hiện đang kết nối với trạm "<<tram2<<": ";
 		getline(cin, tram1);
 		if (tram1 == "0") {
-		    cout << "Nhap khoang cach tu " << tenTramMoi << " den " << tram2 << ": ";
+		    cout << "Nhập khoảng cách từ " << tenTramMoi << " đến " << tram2 << ": ";
 		    cin >> khoangCach2;
 		    cin.ignore();
+			while(khoangCach2<0){
+				cout << "Nhập lại khoảng cách: ";
+				cin >> khoangCach2;
+			}
 			if (khoangCach2 > 0) {
 		        route.setDistance(tramMoiIdx, idxTram2, khoangCach2);
 		        route.setDistance(idxTram2, tramMoiIdx, khoangCach2);
-				cout << "Da cap nhat khoang cach giua " << tenTramMoi << " va " << tram2 << "." << endl;
+				cout << "Đã cập nhật khoảng cách giữa " << tenTramMoi << " va " << tram2 << "." << endl;
 		    } else {
-		        cout << "Khoang cach khong hop le!" << endl;
+		        cout << "Khoảng cách không hợp lệ!" << endl;
 			}
 			continue;
 		}
 		int idxTram1 = route.timTram(tram1);
 		if (idxTram1 == -1) {
-		    cout << "Tram 1 khong ton tai!" << endl;
+		    cout << "Tram " << tram1 <<" không hợp lệ!" << endl;
 		    continue;
 		}
 		if (route.getDistance(idxTram1, idxTram2) != INF) {
-		    cout << "Xoa khoang cach giua tram " << tram1 << " va tram " << tram2 << endl;
+		    cout << "Xóa khoảng cách giữa tram " << tram1 << " va tram " << tram2 << endl;
 		    route.setDistance(idxTram1, idxTram2, INF);
 		    route.setDistance(idxTram2, idxTram1, INF);
-		    cout << "Nhap khoang cach tu " << tram1 << " den " << tenTramMoi << ": ";
+		    cout << "Nhập khoảng cách từ  " << tram1 << " đến " << tenTramMoi << ": ";
 		    cin >> khoangCach1;
 		    cin.ignore();
-			cout << "Nhap khoang cach tu " << tenTramMoi << " den " << tram2 << ": ";
+			while(khoangCach1<0){
+				cout << "Nhập lại khoảng cách: ";
+				cin >> khoangCach1;
+			}
+			cout << "Nhập khoảng cách từ " << tenTramMoi << " đến " << tram2 << ": ";
 		    cin >> khoangCach2;
 		    cin.ignore();
+			while(khoangCach2<0){
+				cout << "Nhập lại khoảng cách: ";
+				cin >> khoangCach2;
+			}
 			if (khoangCach1 > 0 && khoangCach2 > 0) {
 		        route.setDistance(idxTram1, tramMoiIdx, khoangCach1);
 		        route.setDistance(tramMoiIdx, idxTram1, khoangCach1);
 				route.setDistance(tramMoiIdx, idxTram2, khoangCach2);
 		        route.setDistance(idxTram2, tramMoiIdx, khoangCach2);
-				cout << "Da cap nhat khoang cach giua " << tram1 << " -> " << tenTramMoi << " -> " << tram2 << "." << endl;
+				cout << "Đã cập nhật khoảng cách " << tram1 << " -> " << tenTramMoi << " -> " << tram2 << "." << endl;
 		    } else {
-		        cout << "Khoang cach khong hop le!" << endl;
+		        cout << "Khoảng cách không hợp lệ!" << endl;
 		    }
 		} else {
-		    cout << "Tram " << tram1 << " va tram " << tram2 << " khong co ket noi truc tiep!" << endl;
+		    cout << "Trạm " << tram1 << " và trạm " << tram2 << " không có kết nối trực tiếp!" << endl;
 		}
 	}
-	cout << "Da them tram moi " << tenTramMoi << " va cap nhat cac ket noi." << endl;
+	cout << "Đã thêm trạm mới " << tenTramMoi << " và cập nhật các kết nối." << endl;
 }
 void Admin::capNhatKhoangCach(BusRoute& route) {
 	string tram1, tram2;
 	int khoangCach;
-	cout << "Nhap tram xuat phat (ten tram): ";
+	cout << "Nhập trạm xuất phát: ";
 	cin.ignore();
 	getline(cin, tram1);
-	cout << "Nhap tram den (ten tram): ";
+	cout << "Nhập trạm đến: ";
 	getline(cin, tram2);
-	cout << "Nhap khoang cach moi: ";
+	cout << "Nhập khoảng cách mới: ";
 	cin >> khoangCach;
 	cin.ignore(); 
+	while(khoangCach<0){
+		cout << "Nhập lại khoảng cách: ";
+		cin >> khoangCach;
+	}
 	int idx1 = route.timTram(tram1);
 	int idx2 = route.timTram(tram2);
 	if (idx1 != -1 && idx2 != -1 && khoangCach > 0) {
 	    route.setDistance(idx1, idx2, khoangCach);
-	    cout << "Da cap nhat khoang cach giua " << tram1 << " va " << tram2 << " thanh " << khoangCach << "." << endl;
+	    cout << "Đã cập nhất khoảng cách giữa " << tram1 << " và " << tram2 << " thành " << khoangCach << "." << endl;
 	} else {
-	    cout << "Tram khong ton tai hoac khoang cach khong hop le!" << endl;
+	    cout << "Trạm không tồn tại!" << endl;
 	}
 }
 

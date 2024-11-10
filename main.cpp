@@ -9,83 +9,201 @@ int main() {
     BusRoute route;
     Admin admin;
     User user;
+    route.loadFromFile("bus_route_data.txt");
     int luaChon;
+
     do {
-        cout << "------------------- MENU -------------------" << endl;
-        cout << "1. Admin" << endl;
-        cout << "2. User" << endl;
-        cout << "0. Thoat" << endl;
-        cout << "Nhap lua chon: ";
+        setTextColor(9); 
+        cout << "\n====================================\n";
+        cout << "|           ";
+        
+        setTextColor(15); // Màu trắng cho chữ
+        cout << "MENU CHÍNH";
+        
+        setTextColor(9); 
+        cout << "            |\n";
+        cout << "====================================\n";
+        cout << "|  ";
+
+        setTextColor(15); // Màu trắng cho chữ
+        cout << "1. Admin                        ";
+        
+        setTextColor(9); 
+        cout << "|\n|  ";
+        
+        setTextColor(15);
+        cout << "2. User                         ";
+        
+        setTextColor(9);
+        cout << "|\n|  ";
+        
+        setTextColor(15);
+        cout << "0. Thoát                       ";
+        
+        setTextColor(9);
+        cout << "|\n";
+        cout << "====================================\n";
+        
+        setTextColor(15); // Đặt lại màu trắng cho chữ
+        cout << "Nhập lựa chọn: ";
         cin >> luaChon;
+        
+        clearScreen();
 
         switch (luaChon) {
             case 1:
                 if (admin.authenticate()) {
                     int adminChoice;
                     do {
-                        cout << "---------- Admin Menu ----------" << endl;
-                        cout << "1. Thiet lap tram" << endl;
-                        cout << "2. Them tram" << endl;
-                        cout << "3. Xoa tram" << endl;
-                        cout << "4. Cap nhat khoang cach" << endl;
-                        cout << "0. Quay lai" << endl;
-                        cout << "Nhap lua chon: ";
+                        setTextColor(5);
+                        cout << "\n====================================\n";
+                        cout << "|           ";
+                        
+                        setTextColor(15);
+                        cout << "MENU ADMIN";
+                        
+                        setTextColor(5);
+                        cout << "             |\n";
+                        cout << "====================================\n";
+                        cout << "|  ";
+                        
+                        setTextColor(15);
+                        cout << "1. Thiết lập trạm         ";
+                        
+                        setTextColor(5);
+                        cout << "|\n|  ";
+                        
+                        setTextColor(15);
+                        cout << "2. Thêm trạm                 ";
+                        
+                        setTextColor(5);
+                        cout << "|\n|  ";
+                        
+                        setTextColor(15);
+                        cout << "3. Xóa trạm                  ";
+                        
+                        setTextColor(5);
+                        cout << "|\n|  ";
+                        
+                        setTextColor(15);
+                        cout << "4. Cập nhật khoảng cách  ";
+                        
+                        setTextColor(5);
+                        cout << "|\n|  ";
+                        
+                        setTextColor(15);
+                        cout << "0. Quay lại                   ";
+                        
+                        setTextColor(5);
+                        cout << "|\n";
+                        cout << "====================================\n";
+                        
+                        setTextColor(15);
+                        cout << "Nhập lựa chọn: ";
                         cin >> adminChoice;
+                        
+                        clearScreen();
 
                         switch (adminChoice) {
-                            case 1:
-                                admin.thietLapTram(route);
-                                break;
-                            case 2:
-                                admin.themTram(route);
-                                break;
-                            case 3:
-                                admin.xoaTram(route);
-                                break;
-                            case 4:
-                                admin.capNhatKhoangCach(route);
-                                break;
+                            case 1: admin.thietLapTram(route); break;
+                            case 2: admin.themTram(route); break;
+                            case 3: admin.xoaTram(route); break;
+                            case 4: admin.capNhatKhoangCach(route); break;
+                            case 0: break;
+                            default: cout << "Lựa chọn không hợp lệ.\n";
                         }
                     } while (adminChoice != 0);
-                } else {
-                    cout << "Sai thong tin dang nhap!" << endl;
                 }
                 break;
 
-            case 2:
+            case 2: {
                 int userChoice;
                 do {
-                    cout << "---------- User Menu ----------" << endl;
-                    cout << "1. Dang ki tai khoan" << endl;
-                    cout << "2. Dang nhap" << endl;
-                    cout << "3. Tim kiem duong di ngan nhat" << endl;
-                    cout << "4. Lich su tim kiem" << endl;
-                    cout << "5. Hien thi tat ca cac tram" << endl;
-                    cout << "0. Quay lai" << endl;
-                    cout << "Nhap lua chon: ";
+                    setTextColor(5);
+                    cout << "\n================================================\n";
+                    cout << "|                 ";
+                    
+                    setTextColor(15);
+                    cout << "MENU USER";
+                    
+                    setTextColor(5);
+                    cout << "                    |\n";
+                    cout << "================================================\n";
+                    cout << "|  ";
+                    
+                    setTextColor(15);
+                    cout << "1. Đăng kí tài khoản                  ";
+                    
+                    setTextColor(5);
+                    cout << "|\n|  ";
+                    
+                    setTextColor(15);
+                    cout << "2. Đăng nhập                            ";
+                    
+                    setTextColor(5);
+                    cout << "|\n|  ";
+                    
+                    setTextColor(15);
+                    cout << "3. Đăng xuất                            ";
+                    
+                    setTextColor(5);
+                    cout << "|\n|  ";
+                    
+                    setTextColor(15);
+                    cout << "4. Hiển thị danh sách trạm           ";
+                    
+                    setTextColor(5);
+                    cout << "|\n|  ";
+                    
+                    setTextColor(15);
+                    cout << "5. Tìm kiếm đường đi ngắn nhất  ";
+                    
+                    setTextColor(5);
+                    cout << "|\n|  ";
+                    
+                    setTextColor(15);
+                    cout << "6. Lịch sử tìm kiếm                  ";
+                    
+                    setTextColor(5);
+                    cout << "|\n|  ";
+                    
+                    setTextColor(15);
+                    cout << "0. Quay lại                               ";
+                    
+                    setTextColor(5);
+                    cout << "|\n";
+                    cout << "================================================\n";
+                    
+                    setTextColor(15);
+                    cout << "Nhập lựa chọn: ";
                     cin >> userChoice;
+                    
+                    clearScreen();
 
                     switch (userChoice) {
-                        case 1:
-                            user.dangKyTaiKhoan();
-                            break;
-                        case 2:
-                            user.dangNhap();
-                            break;
-                        case 3:
-                            user.timDuongDiNganNhat(route);
-                            break;
-                        case 4:
-                            user.hienThiLichSuTimKiem();
-                            break;
-                        case 5:
-                            user.hienThiTatCaTram(route);
-                            break;
+                        case 1: user.dangKyTaiKhoan(); break;
+                        case 2: user.dangNhap(); break;
+                        case 3: user.dangXuat(); break;
+                        case 4: user.hienThiDanhSachTram(route); break;
+                        case 5: user.timDuongDiNganNhat(route); break;
+                        case 6: user.hienThiLichSuTimKiem(); break;
+                        case 0: break;
+                        default: cout << "Lựa chọn không hợp lệ.\n";
                     }
                 } while (userChoice != 0);
                 break;
+            }
+
+            case 0:
+                cout << "Thoát chương trình.\n";
+                route.saveToFile("bus_route_data.txt");
+                break;
+
+            default:
+                cout << "Lựa chọn không hợp lệ.\n";
         }
     } while (luaChon != 0);
 
+    setTextColor(7); // Đặt lại màu mặc định trước khi kết thúc
     return 0;
 }
