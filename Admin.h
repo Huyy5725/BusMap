@@ -30,12 +30,12 @@ bool Admin::authenticate() {
     int attempts = 0;
 
     while (attempts < 3) {
-        cout << "Nhập tên đăng nhập: ";
+        cout << "Nhap ten dang nhap: ";
         if (attempts == 0) {
             cin.ignore();
         }
         getline(cin, user);
-        cout << "Nhập mật khẩu: ";
+        cout << "Nhap mat khau: ";
         pass.clear();
         while (true) {
             ch = _getch();

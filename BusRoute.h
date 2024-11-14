@@ -158,18 +158,51 @@ void BusRoute::dijkstra(const string& startTram, const string& endTram) {
 	if (dist[end] == INF) {
 	    cout << "Không có tuyến trực tiếp từ " << startTram << " tới " << endTram << "." << endl;
 	} else {
-	    cout << "Khoảng cách ngắn nhất giữa " << startTram << " và " << endTram << " là: " << dist[end] << endl;
-	    cout << "Đường đi: ";
+	    cout << "Khoảng cách ngắn nhất giữa " << startTram << " và " << endTram << " là: " << dist[end] << "km" << endl;
+	    int distanceInMeters = dist[end] * 1000; 
+		int travelTimeInMinutes = distanceInMeters / 333;  
+		int hours = travelTimeInMinutes / 60;
+		int minutes = travelTimeInMinutes % 60;
+		if (minutes == 60) { 
+			minutes = 0;
+			hours += 1;
+		}
+		cout << "Thời gian dự tính để đến: ";
+		if (hours > 0) {
+			cout << hours << " giờ ";
+		}
+		cout << minutes << " phút." << endl;
+		cout << "Đường đi: ";
 	        inDuongDi(parent, end);
 	        cout << endTram << endl;
 	}
 }
+int countConnections(int stopIndex, int numStops, const int distance[MAX][MAX]) {
+    int count = 0;
+    for (int i = 0; i < numStops; i++) {
+        if (distance[stopIndex][i] != INF && distance[stopIndex][i] != 0) {
+            count++;
+        }
+    }
+    return count;
+}
 void BusRoute::inDuongDi(int parent[], int i) {
-	if (parent[i] == -1) {
-	    return;
+    if (parent[i] == -1) {
+        return;
+    }
+    inDuongDi(parent, parent[i]);
+    int connectionCount = countConnections(parent[i], numStops, distance);
+    
+    if (connectionCount > 3) {
+		setTextColor(12); // Màu đỏ
+	} else if (connectionCount == 3) {
+		setTextColor(14); // Màu vàng
+	} else {
+		setTextColor(10); // Màu trắng
 	}
-	inDuongDi(parent, parent[i]);
-	cout << nameStop[parent[i]] << " -> ";
+    
+    cout << nameStop[parent[i]] << " -> ";
+    setTextColor(10);
 }
 int BusRoute::minDistance(int dist[], bool visited[]) {
 	int min = INF, min_index = -1;
