@@ -133,7 +133,12 @@ void User::dangKyTaiKhoan() {
                 cout << (showPassword ? ch : '*');
             }
         }
-        if(password.empty()){ cout << "\nMật khẩu không được để trống!" << endl; }
+        if (password.find(' ') != string::npos) {
+            cout << "\nMật khẩu không được chứa khoảng trắng!" << endl;
+            password.clear(); // Reset mật khẩu để người dùng nhập lại
+        } else if (password.empty()) {
+            cout << "\nMật khẩu không được để trống!" << endl;
+        }
     } while(password.empty());
     accounts[soLuongNguoiDung].username = username;
     accounts[soLuongNguoiDung].gmail = gmail;
@@ -157,8 +162,7 @@ bool User::dangNhap() {
     while (attempts < 3) { 
         do {
             cout << "Nhập tên đăng nhập: ";
-            cin.ignore();
-            getline(cin, username);
+            getline(cin >> std::ws, username);
             if (username.empty()) {
                 cout << "Tên đăng nhập không được để trống!" << endl;
             }
@@ -189,7 +193,10 @@ bool User::dangNhap() {
                     cout << (showPassword ? ch : '*');
                 }
             }
-            if (password.empty()) {
+            if (password.find(' ') != string::npos) {
+                cout << "\nMật khẩu không được chứa khoảng trắng!" << endl;
+                password.clear(); // Reset mật khẩu để người dùng nhập lại
+            } else if (password.empty()) {
                 cout << "\nMật khẩu không được để trống!" << endl;
             }
         } while (password.empty());
@@ -255,39 +262,70 @@ void User::timDuongDiNganNhat(BusRoute& route) {
             cout << "Tên trạm không được để trống!" << endl;
         }
     } while (endTram.empty());
-    cout << "Bạn có muốn thêm điểm dừng không? (y/n): ";
-    char choice;
-    cin >> choice;
-    bool hasStopover = (choice == 'y' || choice == 'Y');
-    if (hasStopover) {
-        do {
-            cout << "Nhập trạm dừng: ";
-            cin.ignore();
-            getline(cin, stopoverTram);
-            if (stopoverTram.empty()) {
-                cout << "Tên trạm không được để trống!" << endl;
-            }
-        } while (stopoverTram.empty());
-        cout << "\nTìm đường từ " << startTram << " đến " << stopoverTram << " đến " << endTram << "...\n";
-        route.dijkstra(startTram, stopoverTram);
-        route.dijkstra(stopoverTram, endTram);
+    char menuChoice;
+    bool hasStopover = false;
+    bool reverseRoute = false;
 
-    } else {
-        route.dijkstra(startTram, endTram);
-    }
-    cout << "Bạn có muốn đảo chiều hành trình không? (y/n): ";
-    cin >> choice;
-    bool reverseRoute = (choice == 'y' || choice == 'Y');
-    if (reverseRoute) {
-        if (hasStopover) {
-            cout << "\nTìm đường quay lại từ " << endTram << " đến " << stopoverTram << " đến " << startTram << "...\n";
-            route.dijkstra(endTram, stopoverTram);
-            route.dijkstra(stopoverTram, startTram);
-        } else {
-            cout << "\nTìm đường quay lại từ " << endTram << " đến " << startTram << "...\n";
-            route.dijkstra(endTram, startTram);
+    do {
+        setTextColor(15);
+        cout << "\nMenu:\n";
+        cout << "1. Thêm điểm dừng\n";
+        cout << "2. Đảo chiều hành trình\n";
+        cout << "3. Tìm đường đi hiện tại\n";
+        cout << "4. Thoát\n";
+        cout << "Chọn một tùy chọn: ";
+        cin >> menuChoice;
+        clearScreen();
+        switch (menuChoice) {
+            case '1': {
+                cout << "Nhập trạm dừng: ";
+                cin.ignore();
+                getline(cin, stopoverTram);
+                if (stopoverTram.empty()) {
+                    cout << "Tên trạm không được để trống!" << endl;
+                } else {
+                    hasStopover = true;
+                    cout << "Đã thêm điểm dừng: " << stopoverTram << endl;
+                }
+                break;
+            }
+            case '2': {
+                reverseRoute = !reverseRoute;
+                cout << "Đã " << (reverseRoute ? "bật" : "tắt") << " đảo chiều hành trình.\n";
+                break;
+            }
+            case '3': {
+                if (hasStopover) {
+                    cout << "\nTìm đường từ " << startTram << " đến " << stopoverTram << " đến " << endTram << "...\n";
+                    route.dijkstra(startTram, stopoverTram);
+                    route.dijkstra(stopoverTram, endTram);
+                } else {
+                    cout << "\nTìm đường từ " << startTram << " đến " << endTram << "...\n";
+                    route.dijkstra(startTram, endTram);
+                }
+
+                if (reverseRoute) {
+                    if (hasStopover) {
+                        cout << "\nTìm đường quay lại từ " << endTram << " đến " << stopoverTram << " đến " << startTram << "...\n";
+                        route.dijkstra(endTram, stopoverTram);
+                        route.dijkstra(stopoverTram, startTram);
+
+                    } else {
+                        cout << "\nTìm đường quay lại từ " << endTram << " đến " << startTram << "...\n";
+                        route.dijkstra(endTram, startTram);
+                    }
+                }
+                break;
+            }
+            case '4': {
+                cout << "Thoát menu.\n";
+                break;
+            }
+            default:
+                cout << "Lựa chọn không hợp lệ, vui lòng chọn lại.\n";
+                break;
         }
-    }
+    } while (menuChoice != '4');
     if (soLanTimKiem[currentUserIndex] < MAX_SEARCH_HISTORY) {
         lichSuTimKiem[currentUserIndex][soLanTimKiem[currentUserIndex]][0] = startTram;
         lichSuTimKiem[currentUserIndex][soLanTimKiem[currentUserIndex]][1] = endTram;
@@ -339,7 +377,7 @@ void User::hienThiDanhSachTram(const BusRoute& busRoute) const {
         setTextColor(6); 
         cout << string(40 - busRoute.getNameStop(i).size(), ' ') << "|\n";
     }
-    cout << "====================================================\n";
+    cout << "===================================================\n";
     
     setTextColor(7);
 }

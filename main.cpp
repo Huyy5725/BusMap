@@ -11,7 +11,6 @@ void displayAdminMenu();
 void displayUserMenu();
 void setTextColor(int color);
 void clearScreen();
-
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     BusRoute route;
@@ -19,7 +18,6 @@ int main() {
     User user;
     route.loadFromFile("bus_route_data.txt");
     int luaChon;
-
     do {
         displayMainMenu();
         cin >> luaChon;
@@ -33,12 +31,12 @@ int main() {
                         displayAdminMenu();
                         cin >> adminChoice;
                         clearScreen();
-
                         switch (adminChoice) {
                             case 1: admin.thietLapTram(route); break;
                             case 2: admin.themTram(route); break;
                             case 3: admin.xoaTram(route); break;
                             case 4: admin.capNhatKhoangCach(route); break;
+                            case 5: admin.hienThiTramVaKetNoi(route);break;
                             case 0: break;
                             default: cout << "Lựa chọn không hợp lệ.\n";
                         }
@@ -134,6 +132,11 @@ void displayAdminMenu() {
     cout << "4. Cập nhật khoảng cách";
     setTextColor(5);
     cout << "             |\n";  
+    cout << "|  ";
+    setTextColor(15);
+    cout << "5. Hiển thị tất cả trạm và kết nối.";
+    setTextColor(5);
+    cout << " |\n";  
     cout << "|  ";
     setTextColor(15);
     cout << "0. Quay lại";

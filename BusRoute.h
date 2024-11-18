@@ -16,7 +16,6 @@ void setTextColor(int color) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, color);
 }
-
 void clearScreen() {
     #ifdef _WIN32
         system("CLS");
@@ -24,7 +23,6 @@ void clearScreen() {
         system("clear");
     #endif
 }
-
 class BusRoute {
 	private:
 	    int numStops;                //so luong tram
@@ -41,13 +39,14 @@ class BusRoute {
 	    int getDistance(int tram1, int tram2) const;
 	    void setDistance(int tram1, int tram2, int khoangCach);
 	    
-	    void nhapTenTram();
+	    void nhapTenTram(int currentStops);
 	    void nhapKhoangCachTheoTen();
 	    int timTram(const string& tenTram) const;
 	    void dijkstra(const string& startTram, const string& endTram);
 	    void inDuongDi(int parent[], int i);
 	    int minDistance(int dist[], bool visited[]);
 	    string nhapTenTramKhongTrung(BusRoute& route);
+		void clearStops();
 
 		void saveToFile(const std::string& filename);
 		void loadFromFile(const std::string& filename);
@@ -79,8 +78,8 @@ void BusRoute::setDistance(int tram1, int tram2, int khoangCach) {
 	distance[tram1][tram2] = khoangCach;
 	distance[tram2][tram1] = khoangCach;
 }
-void BusRoute::nhapTenTram() {
-	for (int i = 0; i < numStops; i++) {
+void BusRoute::nhapTenTram(int currentStops) {
+	for (int i = currentStops ; i < numStops; i++) {
 		cout << "Nhập tên trạm " << i + 1 << ": ";
 		nameStop[i] = nhapTenTramKhongTrung(*this);  
 	}
@@ -92,24 +91,31 @@ void BusRoute::nhapKhoangCachTheoTen() {
 	    cout << "Nhập trạm xuất phát (tên trạm, nhập '0' để kết thúc): ";
 	    getline(cin, tram1);
 		if (tram1 == "0") break;
-		while(timTram(tram1)==-1){
-			cout << "Trạm không tồn tại!" << endl;
-			cout << "Nhập trạm xuất phát: ";getline(cin, tram1);
+		if(timTram(tram1)==-1){
+			cout << "Trạm không tồn tại!" << endl;continue;
 		}
-	    
 	    cout << "Nhập trạm đến (tên trạm): ";
 	    getline(cin, tram2);
-		while(timTram(tram1)==-1){
-			cout << "Trạm không tồn tại!" << endl;
-			cout << "Nhập trạm xuất đến: ";getline(cin, tram2);
+		if(tram2==tram1){
+			cout << "Không được nhập trùng."<<endl;
+			continue;
+		}
+		if(timTram(tram2)==-1){
+			cout << "Trạm không tồn tại!" << endl;continue;
 		}
 	    cout << "Nhập khoảng cách giữa " << tram1 << " và " << tram2 << ": ";
-	    cin >> khoangCach;
-	    cin.ignore(); 
-		while(khoangCach<0){
-			cout << "Nhập lại khoảng cách giữa " << tram1 << " và " << tram2 << ": ";
+	     
+		while(true){
 			cin >> khoangCach;
-	    	cin.ignore(); 
+	    	cin.ignore();
+			if(cin.fail()||khoangCach<0){
+				cin.clear();
+				cin.ignore(1000, '\n');
+				cout <<"Không hợp lệ"<<endl;
+				cout << "Nhập lại khoảng cách giữa " << tram1 << " và " << tram2 << ": ";		
+			}else {
+				break;
+			}
 		}
 	    int idx1 = timTram(tram1);
 	    int idx2 = timTram(tram2);	
@@ -155,15 +161,24 @@ void BusRoute::dijkstra(const string& startTram, const string& endTram) {
 	        }
 	    }
 	}
+	setTextColor(15);
 	if (dist[end] == INF) {
 	    cout << "Không có tuyến trực tiếp từ " << startTram << " tới " << endTram << "." << endl;
 	} else {
-	    cout << "Khoảng cách ngắn nhất giữa " << startTram << " và " << endTram << " là: " << dist[end] << "km" << endl;
-	    int distanceInMeters = dist[end] * 1000; 
-		int travelTimeInMinutes = distanceInMeters / 333;  
-		int hours = travelTimeInMinutes / 60;
-		int minutes = travelTimeInMinutes % 60;
-		if (minutes == 60) { 
+	    double distanceInMeters = dist[end] * 100;
+		if (distanceInMeters >= 1000) {
+			cout << "Khoảng cách ngắn nhất giữa " << startTram << " và " << endTram << " là: " 
+				<< distanceInMeters / 1000.0 << " km" << endl;
+		} else {
+			cout << "Khoảng cách ngắn nhất giữa " << startTram << " và " << endTram << " là: " 
+				<< distanceInMeters << " m" << endl;
+		}
+		double travelTimeInHours = distanceInMeters / 5000.0; 
+		double totalMinutes = travelTimeInHours * 60.0; 
+		int roundedMinutes = (totalMinutes > 0 && totalMinutes < 1) ? 1 : (int)(totalMinutes + 0.5);
+		int hours = roundedMinutes / 60;
+		int minutes = roundedMinutes % 60;
+		if (minutes == 60) {
 			minutes = 0;
 			hours += 1;
 		}
@@ -173,8 +188,8 @@ void BusRoute::dijkstra(const string& startTram, const string& endTram) {
 		}
 		cout << minutes << " phút." << endl;
 		cout << "Đường đi: ";
-	        inDuongDi(parent, end);
-	        cout << endTram << endl;
+		inDuongDi(parent, end);
+		cout << endTram << endl;
 	}
 }
 int countConnections(int stopIndex, int numStops, const int distance[MAX][MAX]) {
@@ -198,18 +213,17 @@ void BusRoute::inDuongDi(int parent[], int i) {
 	} else if (connectionCount == 3) {
 		setTextColor(14); // Màu vàng
 	} else {
-		setTextColor(10); // Màu trắng
+		setTextColor(10);// Màu xanh
 	}
-    
     cout << nameStop[parent[i]] << " -> ";
-    setTextColor(10);
+	setTextColor(10);
 }
 int BusRoute::minDistance(int dist[], bool visited[]) {
 	int min = INF, min_index = -1;
 	for (int i = 0; i < numStops; i++) {
-	if (!visited[i] && dist[i] <= min) {
-	    min = dist[i], min_index = i;
-	}
+		if (!visited[i] && dist[i] <= min) {
+			min = dist[i], min_index = i;
+		}
 	}
 	return min_index;
 }
@@ -267,4 +281,16 @@ void BusRoute::loadFromFile(const std::string& filename) {
         cerr << "Không thể mở file để đọc!" << endl;
     }
 }
+void BusRoute::clearStops() {
+    numStops = 0;  
+    for (int i = 0; i < MAX; i++) {
+        nameStop[i].clear();  
+    }
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX; j++) {
+            distance[i][j] = (i == j) ? 0 : INF; 
+        }
+    }
+}
+
 #endif
