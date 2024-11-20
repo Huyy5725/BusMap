@@ -108,10 +108,12 @@ void BusRoute::nhapKhoangCachTheoTen() {
 		while(true){
 			cin >> khoangCach;
 	    	cin.ignore();
-			if(cin.fail()||khoangCach<0){
+			if(cin.fail()||khoangCach<=0){
 				cin.clear();
 				cin.ignore(1000, '\n');
+				setTextColor(14);
 				cout <<"Không hợp lệ"<<endl;
+				setTextColor(15);
 				cout << "Nhập lại khoảng cách giữa " << tram1 << " và " << tram2 << ": ";		
 			}else {
 				break;
@@ -254,15 +256,21 @@ void BusRoute::saveToFile(const std::string& filename) {
         }
         for (int i = 0; i < numStops; i++) {
             for (int j = 0; j < numStops; j++) {
-                outFile << distance[i][j] << " ";
+                outFile << distance[i][j];
+                if (j < numStops - 1) {
+                    outFile << " "; 
+                }
             }
             outFile << endl;
         }
+
         outFile.close();
+        cout << "Dữ liệu đã được lưu thành công vào file: " << filename << endl;
     } else {
         cerr << "Không thể mở file để ghi!" << endl;
     }
 }
+
 void BusRoute::loadFromFile(const std::string& filename) {
     ifstream inFile(filename);
     if (inFile.is_open()) {

@@ -10,6 +10,7 @@ void displayMainMenu();
 void displayAdminMenu();
 void displayUserMenu();
 void setTextColor(int color);
+
 void clearScreen();
 int main() {
     SetConsoleOutputCP(CP_UTF8);
@@ -22,11 +23,14 @@ int main() {
         displayMainMenu();
         cin >> luaChon;
         clearScreen();
-
         switch (luaChon) {
             case 1:
                 if (admin.authenticate()) {
                     int adminChoice;
+                    clearScreen();
+                    setTextColor(10);
+                    cout <<"Đăng nhập thành công!"<<endl;
+                    setTextColor(15);
                     do {
                         displayAdminMenu();
                         cin >> adminChoice;
@@ -38,7 +42,10 @@ int main() {
                             case 4: admin.capNhatKhoangCach(route); break;
                             case 5: admin.hienThiTramVaKetNoi(route);break;
                             case 0: break;
-                            default: cout << "Lựa chọn không hợp lệ.\n";
+                            default: 
+                                setTextColor(4);
+                                cout << "Lựa chọn không hợp lệ.\n";
+                                setTextColor(15);
                         }
                     } while (adminChoice != 0);
                 }
@@ -50,14 +57,21 @@ int main() {
                     cin >> userChoice;
                     clearScreen();
                     switch (userChoice) {
-                        case 1: user.dangKyTaiKhoan(); break;
+                        case 1: user.dangKyTaiKhoan();break;
                         case 2: user.dangNhap(); break;
                         case 3: user.dangXuat(); break;
                         case 4: user.hienThiDanhSachTram(route); break;
                         case 5: user.timDuongDiNganNhat(route); break;
                         case 6: user.hienThiLichSuTimKiem(); break;
-                        case 0: break;
-                        default: cout << "Lựa chọn không hợp lệ.\n";
+                        case 0: {
+                            setTextColor(10);
+                            cout << "HẸN GẶP LẠI BẠN!\n";
+                            setTextColor(15);break;
+                        }
+                        default: 
+                            setTextColor(4);
+                            cout << "Lựa chọn không hợp lệ.\n";
+                            setTextColor(15);
                     }
                 } while (userChoice != 0);
                 break;
@@ -67,10 +81,11 @@ int main() {
                 route.saveToFile("bus_route_data.txt");
                 break;
             default:
+                setTextColor(4);
                 cout << "Lựa chọn không hợp lệ.\n";
+                setTextColor(15);
         }
     } while (luaChon != 0);
-
     setTextColor(7); 
     return 0;
 }
@@ -99,8 +114,9 @@ void displayMainMenu() {
     setTextColor(9);
     cout << "                            |\n";
     cout << "========================================\n";
+    setTextColor(14);
+    cout << "=> Nhập lựa chọn: ";
     setTextColor(15);
-    cout << "Nhập lựa chọn: ";
 }
 
 void displayAdminMenu() {
@@ -143,8 +159,9 @@ void displayAdminMenu() {
     setTextColor(5);
     cout << "                         |\n"; 
     cout << "========================================\n";
+    setTextColor(14);
+    cout << "=> Nhập lựa chọn: ";
     setTextColor(15);
-    cout << "Nhập lựa chọn: ";
 }
 void displayUserMenu() {
     setTextColor(5);
@@ -191,6 +208,7 @@ void displayUserMenu() {
     setTextColor(5);
     cout << "                         |\n";
     cout << "========================================\n";
+    setTextColor(14);
+    cout << "=> Nhập lựa chọn: ";
     setTextColor(15);
-    cout << "Nhập lựa chọn: ";
 }
